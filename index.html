@@ -52,129 +52,8 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo } = React;
 
-        // --- Mock Data (Dữ liệu mặc định từ questions.json) ---
-        const INITIAL_QUESTIONS = [
-            {
-                id: 1,
-                question: "Chiều (dimension) nào được xem xét khi xác định nguồn gốc của các yêu cầu trong Kỹ nghệ yêu cầu?",
-                options: ["How (Thế nào?)", "What (Cái gì?)", "Why (Tại sao?)", "Who (Ai?)"],
-                correct: 3,
-                priority: 10,
-                explanation: "Chiều 'Who' xác định các bên liên quan (Stakeholders) và tác nhân, từ đó xác định nguồn gốc và người chịu trách nhiệm cho các yêu cầu."
-            },
-            {
-                id: 2,
-                question: "Trong kỹ nghệ yêu cầu, xem xét theo chiều 'WHY' (Tại sao) nhằm mục đích gì?",
-                options: ["Để xác định các dịch vụ phần mềm", "Để đạt được các mục tiêu kinh doanh và biện minh cho sự tồn tại của hệ thống", "Để xác định giao diện người dùng", "Để xác định kiến trúc hệ thống"],
-                correct: 1,
-                priority: 10,
-                explanation: "Chiều 'Why' tập trung vào mục tiêu chiến lược, giá trị kinh doanh và lý do hệ thống cần được xây dựng."
-            },
-            {
-                id: 3,
-                question: "Đâu là một khó khăn thường gặp khi xem xét theo chiều 'WHY'?",
-                options: ["Cần đánh giá các phương án khác nhau cho cùng một mục tiêu", "Viết mã nguồn quá phức tạp", "Khó khăn trong việc vẽ biểu đồ lớp", "Không có sự tham gia của lập trình viên"],
-                correct: 0,
-                priority: 10,
-                explanation: "Khó khăn của chiều 'Why' là phải so sánh, đánh giá nhiều phương án (alternatives) để chọn ra cách tốt nhất đạt được mục tiêu."
-            },
-            {
-                id: 4,
-                question: "Chiều 'WHAT' (Cái gì) trong kỹ nghệ yêu cầu hướng đến điểm nào sau đây?",
-                options: ["Xác định các bên liên quan (Stakeholders)", "Xác định các dịch vụ và chức năng phần mềm cần phát triển", "Xác định chi phí dự án", "Xác định ngôn ngữ lập trình sẽ sử dụng"],
-                correct: 1,
-                priority: 10,
-                explanation: "Chiều 'What' tập trung vào các yêu cầu chức năng, dịch vụ và các ràng buộc mà hệ thống phải đáp ứng."
-            },
-            {
-                id: 5,
-                question: "Biểu đồ nào được sử dụng để mô hình hóa hành vi hệ thống ở cấp độ thể hiện (instances), mô tả chuỗi thông điệp giữa các đối tượng?",
-                options: ["Biểu đồ trạng thái (State Diagram)", "Biểu đồ lớp (Class Diagram)", "Biểu đồ ca sử dụng (Use Case Diagram)", "Biểu đồ tuần tự (Sequence Diagram)"],
-                correct: 3,
-                priority: 10,
-                explanation: "Sequence Diagram (Biểu đồ tuần tự) thể hiện sự tương tác giữa các thể hiện (instances) theo trình tự thời gian thông qua các thông điệp."
-            },
-            {
-                id: 6,
-                question: "Biểu đồ nào thường được sử dụng để mô hình hóa hành vi vòng đời của một đối tượng (cấp độ lớp)?",
-                options: ["Biểu đồ tuần tự (Sequence Diagram)", "Biểu đồ trạng thái (State Diagram)", "Biểu đồ thành phần (Component Diagram)", "Biểu đồ triển khai (Deployment Diagram)"],
-                correct: 1,
-                priority: 10,
-                explanation: "State Diagram (Biểu đồ trạng thái) mô tả các trạng thái mà một đối tượng có thể trải qua trong vòng đời của nó và các sự kiện gây chuyển trạng thái."
-            },
-            {
-                id: 7,
-                question: "Kịch bản tiêu cực (Negative Scenario) dùng để làm gì?",
-                options: ["Mô tả các hành vi giúp đạt được mục tiêu nhanh nhất", "Để thể hiện các hành vi trái phép, ngoại lệ hoặc cản trở việc đạt mục tiêu", "Mô tả giao diện người dùng khi hệ thống tắt", "Chỉ dùng để kiểm thử hiệu năng"],
-                correct: 1,
-                priority: 10,
-                explanation: "Kịch bản tiêu cực mô tả các tình huống lỗi, ngoại lệ hoặc hành vi không mong muốn để đảm bảo hệ thống xử lý được các trường hợp này."
-            },
-            {
-                id: 8,
-                question: "Các sự kiện ngoài (external event) trong biểu đồ trạng thái thường được điều khiển bởi ai/cái gì?",
-                options: ["Bởi chính đối tượng đó", "Bởi một tác từ (actor) hoặc đối tượng khác bên ngoài máy trạng thái đang xét", "Luôn luôn bởi người quản trị hệ thống", "Bởi cơ sở dữ liệu"],
-                correct: 1,
-                priority: 10,
-                explanation: "Sự kiện ngoài (external event) xuất phát từ môi trường bên ngoài biên của đối tượng, thường do Actor hoặc đối tượng khác gửi đến."
-            },
-            {
-                id: 9,
-                question: "Khó khăn chính khi xem xét theo chiều 'WHAT' là gì?",
-                options: ["Giải quyết các xung đột mục tiêu và đảm bảo tính đầy đủ của dịch vụ", "Tìm kiếm nhân sự cho dự án", "Mua sắm thiết bị phần cứng", "Đào tạo người dùng cuối"],
-                correct: 0,
-                priority: 10,
-                explanation: "Khi xác định 'Cái gì', khó khăn là phải đảm bảo các yêu cầu đầy đủ, nhất quán và giải quyết các mâu thuẫn giữa các bên liên quan."
-            },
-            {
-                id: 10,
-                question: "Phát biểu nào sau đây là ĐÚNG về 'Sự kiện trong' (Internal Event)?",
-                options: ["Là sự kiện do người dùng bên ngoài kích hoạt", "Là sự kiện xảy ra bên trong hệ thống hoặc đối tượng đang xét, thường do đối tượng tự kích hoạt", "Là sự kiện liên quan đến thời tiết", "Là sự kiện khi mất kết nối mạng"],
-                correct: 1,
-                priority: 10,
-                explanation: "Sự kiện trong (Internal Event) phát sinh từ bên trong hệ thống hoặc do chính đối tượng tự gửi cho mình để chuyển đổi trạng thái."
-            },
-            {
-                id: 11,
-                question: "Đặc tả yêu cầu phần mềm (SRS) là kết quả chính của giai đoạn nào?",
-                options: ["Thiết kế hệ thống", "Kiểm thử chấp nhận", "Phân tích và đặc tả yêu cầu", "Bảo trì phần mềm"],
-                correct: 2,
-                priority: 10,
-                explanation: "SRS là tài liệu đầu ra quan trọng nhất sau khi hoàn thành việc thu thập, phân tích và đặc tả các yêu cầu."
-            },
-            {
-                id: 12,
-                question: "Trong mô hình Use Case, mối quan hệ 'Include' biểu thị điều gì?",
-                options: ["Hành vi của Use Case này có thể được mở rộng bởi Use Case khác", "Hành vi của Use Case này luôn bao gồm (bắt buộc) hành vi của Use Case khác", "Use Case này kế thừa từ Use Case khác", "Hai Use Case chạy song song"],
-                correct: 1,
-                priority: 10,
-                explanation: "Include thể hiện mối quan hệ bắt buộc: Use Case cơ sở luôn luôn gọi đến Use Case được include (thường dùng để tách chức năng dùng chung)."
-            },
-            {
-                id: 13,
-                question: "Kỹ thuật 'JAD' (Joint Application Development) còn được gọi là gì?",
-                options: ["Phỏng vấn nhóm", "Hội thảo yêu cầu (Requirements Workshop)", "Quan sát trực tiếp", "Tạo mẫu nhanh"],
-                correct: 1,
-                priority: 10,
-                explanation: "JAD là một kỹ thuật hội thảo tập trung (Workshop) nơi các bên liên quan cùng làm việc để xác định yêu cầu nhanh chóng."
-            },
-            {
-                id: 14,
-                question: "Yêu cầu nào sau đây là Yêu cầu phi chức năng (Non-functional)?",
-                options: ["Hệ thống phải cho phép tìm kiếm sản phẩm theo tên", "Hệ thống phải gửi email xác nhận sau khi đặt hàng", "Hệ thống phải đảm bảo thời gian phản hồi dưới 1 giây cho 90% yêu cầu", "Hệ thống phải có chức năng đăng xuất"],
-                correct: 2,
-                priority: 10,
-                explanation: "Đây là yêu cầu về Hiệu năng (Performance), thuộc nhóm phi chức năng. Các câu còn lại là chức năng cụ thể."
-            },
-            {
-                id: 15,
-                question: "Tính chất 'Khả năng kiểm tra' (Testable) của yêu cầu có nghĩa là gì?",
-                options: ["Yêu cầu phải ngắn gọn", "Phải có cách để xác định (đo lường/kiểm thử) xem hệ thống có đáp ứng yêu cầu đó hay không", "Yêu cầu phải được viết bằng tiếng Anh", "Yêu cầu phải được khách hàng ký duyệt"],
-                correct: 1,
-                priority: 10,
-                explanation: "Một yêu cầu tốt phải kiểm tra được (Testable), nghĩa là có tiêu chí rõ ràng để Tester xác nhận Pass/Fail."
-            }
-        ];
+        // --- Data sẽ được load từ questions.json ---
+        let INITIAL_QUESTIONS = [];
 
         // --- Icons Components (Using Lucide via SVG) ---
         const Icon = ({ name, size = 20, className = "" }) => {
@@ -205,24 +84,41 @@
 
             // Load data from LocalStorage on mount
             useEffect(() => {
-                const storedQuestions = localStorage.getItem('re_questions');
-                const storedSettings = localStorage.getItem('re_settings');
+                // Load từ questions.json
+                fetch('questions.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Thêm id cho mỗi câu hỏi
+                        const questionsWithId = data.map((q, index) => ({
+                            ...q,
+                            id: index + 1
+                        }));
+                        INITIAL_QUESTIONS = questionsWithId;
+                        
+                        // Load saved data hoặc sử dụng data từ JSON
+                        const storedQuestions = localStorage.getItem('re_questions');
+                        const storedSettings = localStorage.getItem('re_settings');
 
-                if (storedQuestions) {
-                    setQuestions(JSON.parse(storedQuestions));
-                } else {
-                    setQuestions(INITIAL_QUESTIONS);
-                    localStorage.setItem('re_questions', JSON.stringify(INITIAL_QUESTIONS));
-                }
+                        if (storedQuestions) {
+                            setQuestions(JSON.parse(storedQuestions));
+                        } else {
+                            setQuestions(questionsWithId);
+                            localStorage.setItem('re_questions', JSON.stringify(questionsWithId));
+                        }
 
-                if (storedSettings) {
-                    setSettings(JSON.parse(storedSettings));
-                }
-                
-                // Initialize Lucide icons
-                setTimeout(() => {
-                    if (window.lucide) window.lucide.createIcons();
-                }, 100);
+                        if (storedSettings) {
+                            setSettings(JSON.parse(storedSettings));
+                        }
+                        
+                        // Initialize Lucide icons
+                        setTimeout(() => {
+                            if (window.lucide) window.lucide.createIcons();
+                        }, 100);
+                    })
+                    .catch(error => {
+                        console.error('Lỗi load questions.json:', error);
+                        alert('Không thể tải dữ liệu câu hỏi. Vui lòng kiểm tra file questions.json');
+                    });
             }, []);
 
             // Audio Control
